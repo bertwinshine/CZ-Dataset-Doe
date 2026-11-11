@@ -90,6 +90,45 @@ The **plateau ratio** compares the typical continuity residual of the last 5,000
 0.05). A case that has stopped improving gives about 1. All 11 excluded cases are between 0.98 and
 1.02.
 
+## Mesh study: coarse and fine meshes
+
+To show how much the results depend on the mesh, and to give multi-fidelity models cheaper and
+more accurate versions of the same cases, 30 cases are also run on a coarser and a finer mesh.
+
+| Mesh | Edge divisions | Nodes | Status |
+|---|---|---|---|
+| coarse | half of the base | 2,091 | 30 cases run and certified |
+| base | as in the main DOE | 8,181 | the main dataset above |
+| fine | double the base | about 32,000 | in preparation |
+
+The 30 cases are the first 32 Sobol points (`sobol_000` to `sobol_031`) without `sobol_012` and
+`sobol_028`, which lie in the unsteady region. The first 32 points of a Sobol design are already
+spread evenly over the box, so this subset is not hand-picked. Every mesh keeps the same bias
+towards the walls, and every case uses the same Fluent settings as the base case (copied with
+`/file/write-settings` and `/file/read-settings`), so the mesh is the only thing that changes.
+
+All 30 coarse cases converged to 1e-6 (2,300 to 5,900 iterations) and close the heat balance within
+0.02 %.
+
+**Converting the other meshes.** `convert` puts every case's nodes into the same order as a
+reference table, and each mesh needs its own reference. For the coarse mesh the reference is the
+anchor case (8 rpm, −3 rpm, 1750 K) run on that mesh and exported from Fluent, turned into a table
+sorted by height and then radius:
+
+```
+python -c "from cz_doe.fluent_io import read_export; read_export('anchor_coarse_raw.txt').sort_values(['z', 'r']).to_csv('cz_1750_coarse_2091.csv', index=False)"
+python -m cz_doe.convert --reference cz_1750_coarse_2091.csv --out data_mf_coarse results_mf_coarse
+python -m cz_doe.certify --nodes 2091 --axis-tol 0.02 data_mf_coarse
+```
+
+**One check is mesh dependent.** On the symmetry axis the radial and swirl velocities must be zero.
+Fluent computes node values on the axis by averaging the neighbouring cells, so a small leftover
+remains, and it grows with cell size. The check is there to catch export mistakes, such as swapped
+velocity columns, which would show up as about 100 %. Its limit is therefore tied to the cell size:
+1 % of the field maximum on the base mesh and 2 % on the coarse mesh, whose cells are twice as large.
+All cases pass. The leftover shrinks with refinement (median 0.36 % on the coarse mesh, 0.15 % on
+the base mesh), which is itself a sign that the solution converges with the mesh.
+
 ## What is in this repository
 
 ```
@@ -128,6 +167,7 @@ python -m cz_doe.status <results folder>        # 5. sort cases into kept / excl
 python -m cz_doe.convert --reference <reference.csv> --out data <results folder>
                                                 # 6. turn Fluent exports into clean tables
 python -m cz_doe.certify data                   # 7. check every boundary condition in every table
+                                                #    other meshes: add --nodes 2091 --axis-tol 0.02
 ```
 
 What each part of `cz_doe/` does:
@@ -158,8 +198,8 @@ turbulent, so the results there describe the laminar model, not the real furnace
 ## Still to do
 
 - Publish the 254 kept cases on Zenodo. They are converted and all 254 pass certification.
-- Coarser and finer mesh runs on a subset of cases, for a mesh-convergence check and for
-  multi-fidelity training.
+- Fine-mesh runs on the same 30 cases, then the grid convergence index (GCI) for the
+  three meshes. Publish the coarse and fine sets on Zenodo with the main data.
 - One HDF5 file per case including the mesh connectivity, for graph-based models.
 - Test sets: the one-parameter sweeps re-run to 1e-6, and cases outside the training box.
 

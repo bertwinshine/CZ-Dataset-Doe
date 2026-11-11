@@ -1,3 +1,6 @@
+import numpy as np
+
+from cz_doe import boundary_conditions as bc
 from cz_doe.certify import certify
 
 
@@ -28,3 +31,23 @@ def test_transposed_velocity_columns_are_rejected(field, anchor):
 def test_swapped_coordinate_columns_are_rejected(field, anchor):
     swapped = field.rename(columns={"r": "z", "z": "r"})[field.columns]
     assert "domain extent" in failed(certify(swapped, anchor))
+
+
+def test_node_count_follows_the_mesh(field, anchor):
+    node_check = {c.name: c for c in certify(field, anchor, n_nodes=2091)}["node count"]
+    assert not node_check.passed
+    assert all(c.passed for c in certify(field, anchor, n_nodes=len(field)))
+
+
+def test_blended_wall_corner_node_is_not_judged_as_free_surface(field, anchor):
+    corner = np.isclose(field.r, bc.R_CRUCIBLE) & np.isclose(field.z, bc.MELT_HEIGHT)
+    blended = field.copy()
+    blended.loc[corner, "T"] -= 0.2
+    assert "free surface T" not in failed(certify(blended, anchor))
+
+
+def test_axis_tolerance_is_adjustable(field, anchor):
+    leaky = field.copy()
+    leaky.loc[leaky.r < 1e-9, "u_r"] = 0.015 * leaky.u_r.abs().max()
+    assert "axis u_r -> 0" in failed(certify(leaky, anchor))
+    assert "axis u_r -> 0" not in failed(certify(leaky, anchor, axis_tol=0.02))

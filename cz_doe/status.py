@@ -3,6 +3,7 @@
 import argparse
 from pathlib import Path
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
@@ -16,11 +17,11 @@ WINDOW = 5000
 SLOW_ITERATIONS = 10000
 
 
-def plateau_ratio(continuity: np.ndarray, window: int = WINDOW) -> float:
+def plateau_ratio(continuity: np.ndarray) -> float:
     """Median of the last window over the window before; about 1 means it stopped falling."""
-    if len(continuity) < 2 * window:
+    if len(continuity) < 2 * WINDOW:
         return float("nan")
-    return float(np.median(continuity[-window:]) / np.median(continuity[-2 * window : -window]))
+    return float(np.median(continuity[-WINDOW:]) / np.median(continuity[-2 * WINDOW : -WINDOW]))
 
 
 def case_status(case_id: str, results: Path) -> dict:
@@ -45,11 +46,6 @@ def build_status(case_matrix: pd.DataFrame, results: Path) -> pd.DataFrame:
 
 
 def plot_parameter_space(status: pd.DataFrame, path: Path) -> None:
-    import matplotlib
-
-    matplotlib.use("Agg")
-    import matplotlib.pyplot as plt
-
     labels = {
         "crystal_rpm": "crystal rotation (rpm)",
         "crucible_rpm": "crucible rotation (rpm)",
@@ -58,17 +54,18 @@ def plot_parameter_space(status: pd.DataFrame, path: Path) -> None:
     pairs = [("crystal_rpm", "crucible_rpm"), ("crystal_rpm", "t_hot"), ("crucible_rpm", "t_hot")]
     kept = status[status.status == "kept"]
     groups = [
-        (kept[~kept.slow], dict(s=14, c="#9aa5b1", label="kept")),
-        (kept[kept.slow], dict(s=40, c="#e8a33d", marker="s", label="kept, slow to converge")),
+        (kept[~kept.slow], "kept", dict(s=14, c="#9aa5b1")),
+        (kept[kept.slow], "kept, slow to converge", dict(s=40, c="#e8a33d", marker="s")),
         (
             status[status.status == "excluded"],
-            dict(s=60, c="#c8333a", marker="x", linewidths=2, label="excluded, unsteady"),
+            "excluded, unsteady",
+            dict(s=60, c="#c8333a", marker="x", linewidths=2),
         ),
     ]
     fig, axes = plt.subplots(1, 3, figsize=(15, 4.6), constrained_layout=True)
     for ax, (x, y) in zip(axes, pairs, strict=True):
-        for df, style in groups:
-            ax.scatter(df[x], df[y], **{**style, "label": f"{style['label']} ({len(df)})"})
+        for df, label, style in groups:
+            ax.scatter(df[x], df[y], label=f"{label} ({len(df)})", **style)
         ax.set_xlabel(labels[x])
         ax.set_ylabel(labels[y])
         ax.grid(alpha=0.25)

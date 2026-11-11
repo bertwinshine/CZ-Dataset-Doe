@@ -84,7 +84,7 @@ def read_transcript(path: Path) -> RunLog:
 def residual_history(path: Path) -> np.ndarray:
     """All residual rows of a transcript, one column per equation, in Fluent's order."""
     rows = _RESIDUAL_LINE.findall(path.read_text(errors="replace"))
-    return np.array([[float(v) for v in row[1].split()] for row in rows]).reshape(-1, 5)
+    return np.array([[float(v) for v in row[1].split()] for row in rows])
 
 
 def read_heat_flux(path: Path) -> tuple[dict[str, float], float]:

@@ -33,7 +33,7 @@ def boundary_masks(d: pd.DataFrame) -> dict[str, pd.Series]:
     top = np.isclose(d.z, bc.MELT_HEIGHT, atol=1e-9)
     # Corner nodes shared by two boundaries are blended by the solver, so they are excluded.
     return {
-        "free": top & (d.r > bc.R_CRYSTAL + GEOM_EPS),
+        "free": top & (d.r > bc.R_CRYSTAL + GEOM_EPS) & (d.r < bc.R_CRUCIBLE - GEOM_EPS),
         "crystal": top & (d.r < bc.R_CRYSTAL - GEOM_EPS),
         "wall": np.isclose(d.r, bc.R_CRUCIBLE, atol=1e-9)
         & (d.z > GEOM_EPS)
@@ -72,7 +72,9 @@ def thermal_checks(d: pd.DataFrame, m: dict[str, pd.Series], p: CaseParams) -> l
     ]
 
 
-def sanity_checks(d: pd.DataFrame, m: dict[str, pd.Series]) -> list[Check]:
+def sanity_checks(
+    d: pd.DataFrame, m: dict[str, pd.Series], n_nodes: int, axis_tol: float
+) -> list[Check]:
     axis = d[m["axis"]]
     # u_r and u_swirl must vanish on the axis; a transposed u_r/u_z export also fails here.
     ur_ratio = np.abs(axis.u_r).max() / np.abs(d.u_r).max()
@@ -81,20 +83,22 @@ def sanity_checks(d: pd.DataFrame, m: dict[str, pd.Series]) -> list[Check]:
     extent_ok = np.isclose(d.r.max(), bc.R_CRUCIBLE) and np.isclose(d.z.max(), bc.MELT_HEIGHT)
     return [
         Check("schema", list(d.columns) == FIELDS, ", ".join(d.columns)),
-        Check("node count", len(d) == N_NODES, f"{len(d)} rows"),
+        Check("node count", len(d) == n_nodes, f"{len(d)} rows"),
         Check(
             "domain extent", bool(extent_ok), f"r max {d.r.max():.3f} m, z max {d.z.max():.3f} m"
         ),
         Check("finite values", bool(np.isfinite(d.to_numpy()).all()), ""),
-        Check("axis u_r -> 0", ur_ratio < MAX_AXIS_RATIO, f"{ur_ratio:.3%} of max"),
-        Check("axis swirl -> 0", swirl_ratio < MAX_AXIS_RATIO, f"{swirl_ratio:.3%} of max"),
+        Check("axis u_r -> 0", ur_ratio < axis_tol, f"{ur_ratio:.3%} of max"),
+        Check("axis swirl -> 0", swirl_ratio < axis_tol, f"{swirl_ratio:.3%} of max"),
     ]
 
 
-def certify(field: pd.DataFrame, p: CaseParams) -> list[Check]:
+def certify(
+    field: pd.DataFrame, p: CaseParams, n_nodes: int = N_NODES, axis_tol: float = MAX_AXIS_RATIO
+) -> list[Check]:
     masks = boundary_masks(field)
     return (
-        sanity_checks(field, masks)
+        sanity_checks(field, masks, n_nodes, axis_tol)
         + swirl_checks(field, masks, p)
         + thermal_checks(field, masks, p)
     )
@@ -104,6 +108,11 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--case-matrix", type=Path, default=Path("case_matrix.csv"))
     parser.add_argument("data", type=Path, help="folder with the converted case CSVs")
+    parser.add_argument("--nodes", type=int, default=N_NODES, help="node count of the mesh")
+    # Axis node values are interpolated from adjacent cells, so the residual grows with cell size.
+    parser.add_argument(
+        "--axis-tol", type=float, default=MAX_AXIS_RATIO, help="axis residual limit, fraction"
+    )
     args = parser.parse_args()
 
     csv_files = sorted(args.data.glob("*.csv"))
@@ -118,7 +127,10 @@ def main() -> None:
             continue
         row = case_matrix.loc[path.stem]
         checks = certify(
-            pd.read_csv(path), CaseParams(row.crystal_rpm, row.crucible_rpm, row.t_hot)
+            pd.read_csv(path),
+            CaseParams(row.crystal_rpm, row.crucible_rpm, row.t_hot),
+            args.nodes,
+            args.axis_tol,
         )
         ok = all(c.passed for c in checks)
         failed += not ok
