@@ -1,0 +1,15 @@
+Data licence: Creative Commons Attribution 4.0 International (CC BY 4.0)
+
+Copyright (c) 2026 Bertwin Kurisinkal Shine
+
+This licence covers the data produced with this repository: the case list
+(cz_manifest.csv), the run summaries (run_status.csv, excluded_cases.csv),
+the figures, and the converted CFD fields published on Zenodo.
+
+You may copy, share and adapt the data for any purpose, also commercially,
+as long as you credit the author, link to the licence and state whether you
+changed anything.
+
+Full legal text: https://creativecommons.org/licenses/by/4.0/legalcode
+
+The Python code in this repository is licensed separately under MIT (see LICENSE).

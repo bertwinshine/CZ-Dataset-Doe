@@ -1,0 +1,26 @@
+cff-version: 1.2.0
+message: "If you use this dataset or code, please cite it as below."
+type: dataset
+title: "CZ-Dataset-Doe: steady CFD reference dataset of Czochralski silicon-melt flow over a three-parameter design of experiments"
+authors:
+  - given-names: Bertwin
+    family-names: Kurisinkal Shine
+    affiliation: Chemnitz University of Technology
+license:
+  - MIT
+  - CC-BY-4.0
+keywords:
+  - Czochralski
+  - silicon melt
+  - CFD
+  - ANSYS Fluent
+  - design of experiments
+  - surrogate model
+  - physics-informed machine learning
+abstract: >-
+  Steady, laminar, 2D axisymmetric ANSYS Fluent simulations of the silicon melt in a
+  Czochralski crucible, run over a Sobol design of crystal rotation, crucible rotation and
+  hot-wall temperature. Every case uses the same 8181-node mesh and is converged to 1e-6.
+  Cases that did not reach a steady solution are listed and excluded. The dataset is meant
+  as reference data for surrogate and physics-informed ML models, not as a prediction of an
+  industrial furnace.

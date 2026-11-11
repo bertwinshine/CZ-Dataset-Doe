@@ -1,0 +1,24 @@
+# Python build and test leftovers
+__pycache__/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.venv/
+
+# Journals contain absolute paths of the machine they were made on
+journals/
+
+# Fluent output and converted data are archived on Zenodo, not in git
+results*/
+data*/
+*.cas.h5
+*.dat.h5
+*.h5
+*.trn
+*_raw.txt
+*_heatflux.txt
+
+# Credentials must never be committed
+.env
+*.key
+*.pem
