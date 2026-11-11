@@ -1,4 +1,4 @@
-"""Certify dataset CSVs against the boundary conditions their manifest row prescribes."""
+"""Certify dataset CSVs against the boundary conditions their row in the case matrix prescribes."""
 
 import argparse
 import sys
@@ -8,8 +8,8 @@ from typing import NamedTuple
 import numpy as np
 import pandas as pd
 
-from cz_doe import bc
-from cz_doe.bc import CaseParams
+from cz_doe import boundary_conditions as bc
+from cz_doe.boundary_conditions import CaseParams
 from cz_doe.fluent_io import FIELDS
 
 N_NODES = 8181
@@ -102,21 +102,21 @@ def certify(field: pd.DataFrame, p: CaseParams) -> list[Check]:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--manifest", type=Path, default=Path("cz_manifest.csv"))
+    parser.add_argument("--case-matrix", type=Path, default=Path("case_matrix.csv"))
     parser.add_argument("data", type=Path, help="folder with the converted case CSVs")
     args = parser.parse_args()
 
     csv_files = sorted(args.data.glob("*.csv"))
     if not csv_files:
         sys.exit(f"no .csv files in {args.data}")
-    manifest = pd.read_csv(args.manifest).set_index("case_id")
+    case_matrix = pd.read_csv(args.case_matrix).set_index("case_id")
     failed = 0
     for path in csv_files:
-        if path.stem not in manifest.index:
+        if path.stem not in case_matrix.index:
             failed += 1
-            print(f"REJECTED {path.stem}: no manifest row\n")
+            print(f"REJECTED {path.stem}: not in the case matrix\n")
             continue
-        row = manifest.loc[path.stem]
+        row = case_matrix.loc[path.stem]
         checks = certify(
             pd.read_csv(path), CaseParams(row.crystal_rpm, row.crucible_rpm, row.t_hot)
         )

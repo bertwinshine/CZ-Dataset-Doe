@@ -1,6 +1,6 @@
 import pytest
 
-from cz_doe.bc import CaseParams, crucible_bottom_temperature, free_surface_swirl
+from cz_doe.boundary_conditions import CaseParams, crucible_bottom_temperature, free_surface_swirl
 
 ANCHOR = CaseParams(crystal_rpm=8.0, crucible_rpm=-3.0, t_hot=1750.0)
 

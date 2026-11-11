@@ -37,8 +37,8 @@ def test_windows_paths_are_converted():
 
 
 def test_run_all_contains_every_case(tmp_path):
-    manifest = pd.DataFrame([ANCHOR, ANCHOR.replace("anchor", "second")])
-    write_journals(manifest, BASE, RESULTS, tmp_path)
+    case_matrix = pd.DataFrame([ANCHOR, ANCHOR.replace("anchor", "second")])
+    write_journals(case_matrix, BASE, RESULTS, tmp_path)
     run_all = (tmp_path / "run_all.jou").read_text()
     assert run_all.startswith(HEADER)
     assert run_all.count("/file/read-case") == 2

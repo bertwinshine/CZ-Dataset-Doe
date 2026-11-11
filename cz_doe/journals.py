@@ -1,11 +1,11 @@
-"""Write one Fluent journal per manifest case, plus run_all.jou that runs them in sequence."""
+"""Write one Fluent journal per case in the case matrix, plus run_all.jou to run them all."""
 
 import argparse
 from pathlib import Path
 
 import pandas as pd
 
-from cz_doe.bc import CaseParams
+from cz_doe.boundary_conditions import CaseParams
 
 MAX_ITERATIONS = 30000
 RESIDUAL_TARGET = "1e-06"
@@ -52,10 +52,10 @@ def case_journal(row: pd.Series, base_case: str | Path, results: str | Path) -> 
     )
 
 
-def write_journals(manifest: pd.DataFrame, base_case: str, results: str, out_dir: Path) -> None:
+def write_journals(case_matrix: pd.DataFrame, base_case: str, results: str, out_dir: Path) -> None:
     out_dir.mkdir(parents=True, exist_ok=True)
     bodies = []
-    for _, row in manifest.iterrows():
+    for _, row in case_matrix.iterrows():
         body = case_journal(row, base_case, results)
         (out_dir / f"{row.case_id}.jou").write_text(HEADER + body)
         bodies.append(body)
@@ -64,22 +64,22 @@ def write_journals(manifest: pd.DataFrame, base_case: str, results: str, out_dir
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--manifest", type=Path, default=Path("cz_manifest.csv"))
+    parser.add_argument("--case-matrix", type=Path, default=Path("case_matrix.csv"))
     parser.add_argument("--base-case", required=True, help="path to the base .cas.h5 for Fluent")
     parser.add_argument("--results", required=True, help="folder Fluent writes results into")
     parser.add_argument("--out", type=Path, default=Path("journals"))
     parser.add_argument("--cases", nargs="+", help="only these case_ids, e.g. for a pilot run")
     args = parser.parse_args()
 
-    manifest = pd.read_csv(args.manifest)
+    case_matrix = pd.read_csv(args.case_matrix)
     if args.cases:
-        unknown = set(args.cases) - set(manifest.case_id)
+        unknown = set(args.cases) - set(case_matrix.case_id)
         if unknown:
-            parser.error(f"not in manifest: {', '.join(sorted(unknown))}")
-        manifest = manifest[manifest.case_id.isin(args.cases)]
+            parser.error(f"not in the case matrix: {', '.join(sorted(unknown))}")
+        case_matrix = case_matrix[case_matrix.case_id.isin(args.cases)]
 
-    write_journals(manifest, args.base_case, args.results, args.out)
-    print(f"wrote {len(manifest)} journals and run_all.jou to {args.out}")
+    write_journals(case_matrix, args.base_case, args.results, args.out)
+    print(f"wrote {len(case_matrix)} journals and run_all.jou to {args.out}")
 
 
 if __name__ == "__main__":

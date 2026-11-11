@@ -2,8 +2,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from cz_doe import bc
-from cz_doe.bc import CaseParams
+from cz_doe import boundary_conditions as bc
+from cz_doe.boundary_conditions import CaseParams
 
 
 @pytest.fixture

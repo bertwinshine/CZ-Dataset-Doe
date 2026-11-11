@@ -39,9 +39,9 @@ def case_status(case_id: str, results: Path) -> dict:
     }
 
 
-def build_status(manifest: pd.DataFrame, results: Path) -> pd.DataFrame:
-    rows = [case_status(case_id, results) for case_id in manifest.case_id]
-    return manifest.merge(pd.DataFrame(rows), on="case_id")
+def build_status(case_matrix: pd.DataFrame, results: Path) -> pd.DataFrame:
+    rows = [case_status(case_id, results) for case_id in case_matrix.case_id]
+    return case_matrix.merge(pd.DataFrame(rows), on="case_id")
 
 
 def plot_parameter_space(status: pd.DataFrame, path: Path) -> None:
@@ -83,11 +83,11 @@ def plot_parameter_space(status: pd.DataFrame, path: Path) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("results", type=Path, help="folder with the .trn and heat-flux files")
-    parser.add_argument("--manifest", type=Path, default=Path("cz_manifest.csv"))
+    parser.add_argument("--case-matrix", type=Path, default=Path("case_matrix.csv"))
     parser.add_argument("--out", type=Path, default=Path("."))
     args = parser.parse_args()
 
-    status = build_status(pd.read_csv(args.manifest), args.results)
+    status = build_status(pd.read_csv(args.case_matrix), args.results)
     status.to_csv(args.out / "run_status.csv", index=False, float_format="%.6g")
     status[status.status == "excluded"].to_csv(
         args.out / "excluded_cases.csv", index=False, float_format="%.6g"

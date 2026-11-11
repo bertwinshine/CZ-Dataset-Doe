@@ -56,7 +56,7 @@ The corners and the centre of the box are added on top.
 | `corner` | 8 | the extremes of the box |
 | `centre` | 1 | the middle of the box |
 
-`cz_manifest.csv` holds the exact values of every case and is the single reference for them.
+`case_matrix.csv` holds the exact values of every case and is the single reference for them.
 
 ## Results so far
 
@@ -93,7 +93,7 @@ The **plateau ratio** compares the typical continuity residual of the last 5,000
 ## What is in this repository
 
 ```
-cz_manifest.csv        the 265 cases and their parameter values
+case_matrix.csv        the 265 cases and their parameter values
 run_status.csv         outcome of every run
 excluded_cases.csv     the 11 runs that did not reach a steady solution
 figures/               plots
@@ -118,7 +118,7 @@ Each step is one command. The code only automates what I would otherwise click t
 265 times, and it checks the results instead of trusting them.
 
 ```
-python -m cz_doe.manifest                       # 1. list the cases (already done: cz_manifest.csv)
+python -m cz_doe.case_matrix                       # 1. list the cases (already done: case_matrix.csv)
 python -m cz_doe.journals --base-case <case.cas.h5> --results <results folder>
                                                 # 2. write one Fluent journal per case
 # in Fluent (2D, double precision): File > Read > Journal > journals/run_all.jou
@@ -134,9 +134,9 @@ What each part of `cz_doe/` does:
 
 | File | Job |
 |---|---|
-| `manifest.py` | builds the case list (Sobol points, corners, centre) |
+| `case_matrix.py` | builds the case list (Sobol points, corners, centre) |
 | `journals.py` | writes the Fluent journal for each case; only the three parameters change |
-| `bc.py` | the boundary conditions written as formulas, so they can be checked |
+| `boundary_conditions.py` | the boundary conditions written as formulas, so they can be checked |
 | `fluent_io.py` | reads Fluent exports, transcripts and heat-flux reports by column name, never by position |
 | `check_runs.py` | flags runs that did not converge or do not close the heat balance |
 | `status.py` | writes `run_status.csv`, `excluded_cases.csv` and the parameter-space plot |
@@ -157,7 +157,7 @@ turbulent, so the results there describe the laminar model, not the real furnace
 
 ## Still to do
 
-- Convert and certify the 254 kept cases, then publish them on Zenodo.
+- Publish the 254 kept cases on Zenodo. They are converted and all 254 pass certification.
 - Coarser and finer mesh runs on a subset of cases, for a mesh-convergence check and for
   multi-fidelity training.
 - One HDF5 file per case including the mesh connectivity, for graph-based models.

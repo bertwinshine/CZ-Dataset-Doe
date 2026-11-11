@@ -1,4 +1,4 @@
-"""Build the case manifest: a scrambled Sobol design plus the corners and centre of the box."""
+"""Build the case matrix: a scrambled Sobol design plus the corners and centre of the box."""
 
 import argparse
 import itertools
@@ -38,20 +38,20 @@ def _frame(group: str, points: np.ndarray) -> pd.DataFrame:
     return df
 
 
-def build_manifest() -> pd.DataFrame:
+def build_case_matrix() -> pd.DataFrame:
     """All cases of the DOE; case_id doubles as the file stem of every output."""
     return pd.concat([sobol_cases(), corner_cases(), centre_case()], ignore_index=True)
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--out", type=Path, default=Path("cz_manifest.csv"))
+    parser.add_argument("--out", type=Path, default=Path("case_matrix.csv"))
     args = parser.parse_args()
 
-    manifest = build_manifest()
-    manifest.to_csv(args.out, index=False, float_format="%.10g")
-    print(f"wrote {len(manifest)} cases to {args.out}")
-    print(manifest.groupby("group").size().to_string())
+    case_matrix = build_case_matrix()
+    case_matrix.to_csv(args.out, index=False, float_format="%.10g")
+    print(f"wrote {len(case_matrix)} cases to {args.out}")
+    print(case_matrix.groupby("group").size().to_string())
 
 
 if __name__ == "__main__":
