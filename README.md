@@ -58,6 +58,19 @@ The corners and the centre of the box are added on top.
 
 `case_matrix.csv` holds the exact values of every case and is the single reference for them.
 
+**Hold-out cases.** `holdout_cases.csv` lists 43 extra cases that are never used for training:
+
+- **31 sweep cases:** the three one-parameter sweeps of the first dataset, at exactly the same values
+  and anchor (8 rpm, −3 rpm, 1745 K), now converged to 1e-6. They test models along familiar lines
+  and show whether stopping the first dataset at 1e-3 changed any result.
+- **12 cases outside the box:** for each parameter two values just past the limit and one far
+  value: crystal 22, 24 and 30 rpm; crucible −11, −12 and −0.5 rpm; hot wall 1790, 1795 and
+  1810 K; and three cases with all three outside at once. Industrial pullers use roughly 5 to 30 rpm
+  for the crystal and 0.5 to 10 rpm for the crucible, so 30 rpm and −0.5 rpm are realistic settings.
+  The 1810 K wall is my choice, not taken from a source. The parameters not being varied sit at
+  the centre of the box. At 30 rpm a real melt would be strongly turbulent, so these cases test
+  the laminar model, not a real furnace.
+
 ## Results so far
 
 Of the 265 runs, **254 reached a steady solution and are kept**. **11 are excluded.**
@@ -138,6 +151,13 @@ Things to know when using these numbers:
   then slightly down). These changes are very small, but the GCI formula does not apply there.
 - Temperature hardly depends on the mesh: the median change is under 0.1 K.
 
+Every number above comes from `mesh_study_quantities.csv` (key quantities per case and mesh, with
+the GCI) and `mesh_study_fields.csv` (whole-field differences), both written by:
+
+```
+python -m cz_doe.mesh_study --coarse data_mf_coarse --base data_doe --fine data_mf_fine
+```
+
 **Converting the other meshes.** `convert` puts every case's nodes into the same order as a
 reference table, and each mesh needs its own reference: the anchor case (8 rpm, −3 rpm, 1750 K)
 run on that mesh and exported from Fluent, turned into a table sorted by height and then radius.
@@ -165,6 +185,8 @@ twice as large. All cases pass. The leftover halves with each refinement (median
 
 ```
 case_matrix.csv        the 265 cases and their parameter values
+holdout_cases.csv      43 extra test cases, never used for training
+mesh_study_*.csv       mesh study results: key quantities, GCI, whole-field differences
 run_status.csv         outcome of every run
 excluded_cases.csv     the 11 runs that did not reach a steady solution
 figures/               plots
@@ -207,6 +229,8 @@ What each part of `cz_doe/` does:
 | File | Job |
 |---|---|
 | `case_matrix.py` | builds the case list (Sobol points, corners, centre) |
+| `holdout_cases.py` | builds the 43 hold-out cases (v1 sweeps, cases outside the box) |
+| `mesh_study.py` | compares the three meshes case by case and computes the GCI |
 | `journals.py` | writes the Fluent journal for each case; only the three parameters change |
 | `boundary_conditions.py` | the boundary conditions written as formulas, so they can be checked |
 | `fluent_io.py` | reads Fluent exports, transcripts and heat-flux reports by column name, never by position |
@@ -232,7 +256,7 @@ turbulent, so the results there describe the laminar model, not the real furnace
 - Publish the 254 kept cases on Zenodo. They are converted and all 254 pass certification.
 - Publish the coarse and fine mesh sets on Zenodo together with the main data.
 - One HDF5 file per case including the mesh connectivity, for graph-based models.
-- Test sets: the one-parameter sweeps re-run to 1e-6, and cases outside the training box.
+- Run and certify the 43 hold-out cases.
 
 ## Running the code yourself
 
