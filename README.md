@@ -97,9 +97,9 @@ more accurate versions of the same cases, 30 cases are also run on a coarser and
 
 | Mesh | Edge divisions | Nodes | Status |
 |---|---|---|---|
-| coarse | half of the base | 2,091 | 30 cases run and certified |
-| base | as in the main DOE | 8,181 | the main dataset above |
-| fine | double the base | about 32,000 | in preparation |
+| coarse | 50 × 40, half of the base | 2,091 | 30 cases run and certified |
+| base | 100 × 80 | 8,181 | the main dataset above |
+| fine | 199 × 160, about double the base | 32,200 | 30 cases run and certified |
 
 The 30 cases are the first 32 Sobol points (`sobol_000` to `sobol_031`) without `sobol_012` and
 `sobol_028`, which lie in the unsteady region. The first 32 points of a Sobol design are already
@@ -107,27 +107,59 @@ spread evenly over the box, so this subset is not hand-picked. Every mesh keeps 
 towards the walls, and every case uses the same Fluent settings as the base case (copied with
 `/file/write-settings` and `/file/read-settings`), so the mesh is the only thing that changes.
 
-All 30 coarse cases converged to 1e-6 (2,300 to 5,900 iterations) and close the heat balance within
-0.02 %.
+All 60 extra runs converged to 1e-6 (coarse 2,300 to 5,900 iterations, fine 1,800 to 6,300) and
+close the heat balance within 0.02 %.
+
+**How much do the results depend on the mesh?** For each of the 30 cases I compared a few key
+numbers on the three meshes and used the grid convergence index (GCI, the standard method of
+Celik et al., 2008). The GCI estimates how far the base-mesh result could still be from a
+mesh-independent answer. Next to it is the plain change when going from the base to the fine mesh.
+
+| Quantity | GCI of base mesh, median (max) | Change base → fine, median (max) |
+|---|---|---|
+| strongest upward/downward velocity | 0.50 % (5.3 %) | 0.33 % (0.75 %) |
+| velocity on the axis at mid-depth | 0.41 % (2.1 %) | 0.27 % (1.4 %) |
+| pressure difference across the melt | 0.28 % (0.56 %) | 0.15 % (0.36 %) |
+| strongest radial velocity | 0.29 % (0.97 %) | 0.18 % (0.33 %) |
+| swirl at r = 0.24 m, mid-depth | 0.02 % (1.3 %) | 0.01 % (0.70 %) |
+| temperature at r = 0.15 m, mid-depth | 0.008 % (0.04 %) | 0.08 K (0.49 K) |
+
+Over the whole field, the fine mesh differs from the base mesh by 0.1 to 0.2 % (at most 0.7 %),
+the coarse mesh by 1 to 2 % (at most 6.6 %). So the 8,181-node base mesh is fine enough for this
+model: refining it further changes the results by well under 1 % in almost every case.
+
+Things to know when using these numbers:
+
+- The larger values all come from the strongest rotation (crystal 15 to 20 rpm, crucible −6 to
+  −10 rpm). Faster flow forms thinner layers, which need smaller cells.
+- The GCI can overstate a single case. For `sobol_007` it gives 5.3 % for the strongest vertical
+  velocity, while the real change from base to fine is 0.5 %. That is why both columns are shown.
+- In a few cases a quantity does not change steadily from coarse to base to fine (it moves up and
+  then slightly down). These changes are very small, but the GCI formula does not apply there.
+- Temperature hardly depends on the mesh: the median change is under 0.1 K.
 
 **Converting the other meshes.** `convert` puts every case's nodes into the same order as a
-reference table, and each mesh needs its own reference. For the coarse mesh the reference is the
-anchor case (8 rpm, −3 rpm, 1750 K) run on that mesh and exported from Fluent, turned into a table
-sorted by height and then radius:
+reference table, and each mesh needs its own reference: the anchor case (8 rpm, −3 rpm, 1750 K)
+run on that mesh and exported from Fluent, turned into a table sorted by height and then radius.
+A hand export from the Fluent window can list one node twice with identical values, so exact
+duplicates are dropped. For the coarse mesh:
 
 ```
-python -c "from cz_doe.fluent_io import read_export; read_export('anchor_coarse_raw.txt').sort_values(['z', 'r']).to_csv('cz_1750_coarse_2091.csv', index=False)"
+python -c "from cz_doe.fluent_io import read_export; read_export('anchor_coarse_raw.txt').drop_duplicates().sort_values(['z', 'r']).to_csv('cz_1750_coarse_2091.csv', index=False)"
 python -m cz_doe.convert --reference cz_1750_coarse_2091.csv --out data_mf_coarse results_mf_coarse
 python -m cz_doe.certify --nodes 2091 --axis-tol 0.02 data_mf_coarse
 ```
+
+The fine mesh works the same way with `anchor_fine_raw.txt`, `cz_1750_fine_32200.csv`,
+`--nodes 32200` and the default axis limit.
 
 **One check is mesh dependent.** On the symmetry axis the radial and swirl velocities must be zero.
 Fluent computes node values on the axis by averaging the neighbouring cells, so a small leftover
 remains, and it grows with cell size. The check is there to catch export mistakes, such as swapped
 velocity columns, which would show up as about 100 %. Its limit is therefore tied to the cell size:
-1 % of the field maximum on the base mesh and 2 % on the coarse mesh, whose cells are twice as large.
-All cases pass. The leftover shrinks with refinement (median 0.36 % on the coarse mesh, 0.15 % on
-the base mesh), which is itself a sign that the solution converges with the mesh.
+1 % of the field maximum on the base and fine meshes, and 2 % on the coarse mesh, whose cells are
+twice as large. All cases pass. The leftover halves with each refinement (median 0.36 % coarse,
+0.15 % base, 0.08 % fine), which is itself a sign that the solution converges with the mesh.
 
 ## What is in this repository
 
@@ -198,8 +230,7 @@ turbulent, so the results there describe the laminar model, not the real furnace
 ## Still to do
 
 - Publish the 254 kept cases on Zenodo. They are converted and all 254 pass certification.
-- Fine-mesh runs on the same 30 cases, then the grid convergence index (GCI) for the
-  three meshes. Publish the coarse and fine sets on Zenodo with the main data.
+- Publish the coarse and fine mesh sets on Zenodo together with the main data.
 - One HDF5 file per case including the mesh connectivity, for graph-based models.
 - Test sets: the one-parameter sweeps re-run to 1e-6, and cases outside the training box.
 
