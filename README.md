@@ -328,7 +328,3 @@ added here once it is on Zenodo.
 - Data (case list, run summaries, figures and the converted fields): CC BY 4.0, see
   [LICENSE-DATA](LICENSE-DATA). Use it freely, including commercially, as long as you credit it.
 
-## Use of AI
-
-The Fluent model setup, the validation and the design decisions are mine. The Python code was
-written with AI assistance (Claude). I reviewed it and tested it against Fluent results before use.
