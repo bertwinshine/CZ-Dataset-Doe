@@ -38,6 +38,41 @@ part of the hold-out set here.
 
 The data format is unchanged: one table per case with r, z, u_r, u_z, u_swirl, p and T at every node.
 
+## Using the data
+
+**Files in the Zenodo record**
+
+| File | Contents |
+|---|---|
+| `cz_v2_doe.zip` → `doe/` | 254 training cases on the base mesh (8,181 nodes) |
+| `cz_v2_holdout.zip` → `holdout/` | 38 test cases: 26 first-dataset sweep cases at 1e-6, 12 outside the training range |
+| `cz_v2_mesh_coarse.zip` → `mesh_coarse/` | 30 DOE points on the coarse mesh (2,091 nodes) |
+| `cz_v2_mesh_fine.zip` → `mesh_fine/` | the same 30 points on the fine mesh (32,200 nodes) |
+| `case_matrix.csv`, `holdout_cases.csv` | the parameters of every case |
+| `doe_run_status.csv`, `holdout_run_status.csv` | outcome of every run; `*_excluded_cases.csv` list the unsteady ones |
+| `mesh_study_*.csv` | mesh study results |
+| `node_order_*.csv` | the node order used for each mesh |
+
+Each case is one CSV named after its `case_id`. Its parameters (crystal and crucible rotation in rpm,
+hot-wall temperature in K) are in `case_matrix.csv` or `holdout_cases.csv` under the same `case_id`.
+
+**Columns and units:** `r`, `z` in m (r from the axis, z upwards from the crucible bottom);
+`u_r`, `u_z`, `u_swirl` in m/s; `p` in Pa, gauge pressure without the hydrostatic part, zero at
+r = 0, z = 0; `T` in K. All cases on one mesh have their nodes in the same order, so they line up
+row by row.
+
+**Intended use**
+
+1. Train on `doe`. Tune model settings by splitting within the DOE cases (for example leave-one-out),
+   not with the hold-out cases.
+2. Test once on `holdout`: the sweep cases test interpolation inside the range, the 12 cases outside
+   the box test extrapolation.
+3. `mesh_coarse` and `mesh_fine` repeat 30 DOE points on other meshes. They are meant for
+   multi-fidelity models and mesh-sensitivity checks, not as an independent test set.
+4. There is no training data in the unsteady region (crystal about 5 to 8 rpm, crucible −1 to −5 rpm,
+   hot wall above about 1753 K). Predictions there are not backed by data; see
+   `doe_excluded_cases.csv`.
+
 ## The physical problem
 
 In the Czochralski process a single silicon crystal is pulled slowly out of a crucible of molten
@@ -300,10 +335,9 @@ turbulent, so the results there describe the laminar model, not the real furnace
 
 ## Still to do
 
-- Publish the 254 kept cases on Zenodo. They are converted and all 254 pass certification.
-- Publish the coarse and fine mesh sets on Zenodo together with the main data.
 - One HDF5 file per case including the mesh connectivity, for graph-based models.
-- Publish the 38 certified hold-out cases on Zenodo with the main data.
+- Publish the dataset on Zenodo (254 DOE, 38 hold-out, 30 + 30 mesh-study cases; package built)
+  and add the DOI here.
 
 ## Running the code yourself
 
@@ -328,3 +362,7 @@ added here once it is on Zenodo.
 - Data (case list, run summaries, figures and the converted fields): CC BY 4.0, see
   [LICENSE-DATA](LICENSE-DATA). Use it freely, including commercially, as long as you credit it.
 
+## Use of AI
+
+The Fluent model setup, the validation and the design decisions are mine. The Python code was
+written with AI assistance and tested against the Fluent results.
