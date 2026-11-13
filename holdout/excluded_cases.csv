@@ -1,0 +1,6 @@
+case_id,group,crystal_rpm,crucible_rpm,t_hot,status,iterations,res_continuity,res_u_axial,res_u_radial,res_swirl,res_energy,energy_imbalance,plateau_ratio,slow
+sweep_t_hot_1765,sweep,8,-3,1765,excluded,30000,0.0052094,4.5906e-06,2.3156e-06,1.7374e-07,6.003e-07,0.0187081,1.00233,False
+sweep_t_hot_1770,sweep,8,-3,1770,excluded,30000,0.011358,8.9289e-06,4.5733e-06,3.0301e-07,1.2814e-06,0.0540284,1.00102,False
+sweep_t_hot_1775,sweep,8,-3,1775,excluded,30000,0.012174,1.4886e-05,8.038e-06,6.6144e-07,1.9017e-06,0.0281019,1.08226,False
+sweep_t_hot_1780,sweep,8,-3,1780,excluded,30000,0.010694,1.3759e-05,7.1124e-06,4.7906e-07,2.0672e-06,0.0755625,1.00591,False
+sweep_t_hot_1785,sweep,8,-3,1785,excluded,30000,0.011873,1.6044e-05,7.762e-06,5.5437e-07,2.4524e-06,0.0771695,0.99813,False

@@ -71,7 +71,7 @@ def plot_parameter_space(status: pd.DataFrame, path: Path) -> None:
         ax.grid(alpha=0.25)
     axes[0].legend(loc="lower right", fontsize=8)
     n_out = (status.status == "excluded").sum()
-    fig.suptitle(f"CZ DOE: {len(status)} cases, {len(status) - n_out} kept, {n_out} excluded")
+    fig.suptitle(f"{len(status)} cases: {len(status) - n_out} kept, {n_out} excluded")
     path.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(path, dpi=200)
     plt.close(fig)

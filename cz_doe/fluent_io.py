@@ -24,6 +24,7 @@ FLUENT_TO_DATASET = {
 COORD_DECIMALS = 10
 
 _RESIDUAL_LINE = re.compile(r"^\s*(\d+)((?:\s+\d\.\d+e[-+]\d+){5})\s", re.MULTILINE)
+_CONVERGED_LINE = re.compile(r"^!\s*(\d+) solution is converged", re.MULTILINE)
 
 
 @dataclass(frozen=True)
@@ -73,9 +74,12 @@ def read_transcript(path: Path) -> RunLog:
     text = path.read_text(errors="replace")
     rows = _RESIDUAL_LINE.findall(text)
     lowered = text.lower()
+    last = int(rows[-1][0]) if rows else None
+    # A continued run repeats its start case's "converged" line; only the last iteration counts.
+    converged_at = {int(i) for i in _CONVERGED_LINE.findall(text)}
     return RunLog(
-        converged="solution is converged" in lowered,
-        iterations=int(rows[-1][0]) if rows else None,
+        converged=last in converged_at,
+        iterations=last,
         final_residuals=tuple(float(v) for v in rows[-1][1].split()) if rows else None,
         solver_error=any(s in lowered for s in ("divergence", "floating point", "error:")),
     )

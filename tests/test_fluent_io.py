@@ -88,3 +88,14 @@ def test_residual_history_reads_every_row(tmp_path):
     history = residual_history(path)
     assert history.shape == (2, 5)
     assert history[-1, 0] == 9.9909e-07
+
+
+def test_converged_line_from_an_earlier_run_does_not_count(tmp_path):
+    # A run continued from a converged case repeats that case's "converged" line.
+    path = tmp_path / "continued.trn"
+    path.write_text(
+        TRANSCRIPT
+        + "  iter  continuity  x-velocity  y-velocity       swirl      energy     time/iter\n"
+        + "  3807  5.1000e-03  4.8000e-06  2.9000e-06  2.1000e-07  5.6000e-07  0:13:52 26194\n"
+    )
+    assert not read_transcript(path).converged

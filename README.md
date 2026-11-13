@@ -71,6 +71,25 @@ The corners and the centre of the box are added on top.
   the centre of the box. At 30 rpm a real melt would be strongly turbulent, so these cases test
   the laminar model, not a real furnace.
 
+**Hold-out results.** 38 of the 43 hold-out cases reached a steady solution and pass certification:
+all 12 cases outside the box, all crystal and crucible sweep cases, and the temperature sweep up to
+1760 K. The temperature cases at 1765, 1770, 1775, 1780 and 1785 K (at 8 rpm and −3 rpm) do not
+settle: the continuity residual stays around 1e-2 for 30,000 iterations and the heat balance is off
+by 2 to 8 %, the same signature as the 11 excluded DOE cases. Starting from the converged 1760 K
+solution instead of a fresh start gives the same result, so at these settings the flow stops being
+steady between 1760 and 1765 K.
+
+Compared with the first dataset, which stopped at 1e-3, the converged sweep cases differ by
+typically 1 to 5 % in the velocity fields (up to about 11 % for a few crucible cases). The first
+dataset's temperature cases at 1765 to 1785 K met the 1e-3 target after about 1,000 iterations,
+before the oscillation set in, so they looked converged without being steady.
+
+The per-case results are in `holdout/run_status.csv` and `holdout/excluded_cases.csv`, written by:
+
+```
+python -m cz_doe.status results_holdout --case-matrix holdout_cases.csv --out holdout
+```
+
 ## Results so far
 
 Of the 265 runs, **254 reached a steady solution and are kept**. **11 are excluded.**
@@ -186,6 +205,7 @@ twice as large. All cases pass. The leftover halves with each refinement (median
 ```
 case_matrix.csv        the 265 cases and their parameter values
 holdout_cases.csv      43 extra test cases, never used for training
+holdout/               outcome of the 43 hold-out runs
 mesh_study_*.csv       mesh study results: key quantities, GCI, whole-field differences
 run_status.csv         outcome of every run
 excluded_cases.csv     the 11 runs that did not reach a steady solution
@@ -256,7 +276,7 @@ turbulent, so the results there describe the laminar model, not the real furnace
 - Publish the 254 kept cases on Zenodo. They are converted and all 254 pass certification.
 - Publish the coarse and fine mesh sets on Zenodo together with the main data.
 - One HDF5 file per case including the mesh connectivity, for graph-based models.
-- Run and certify the 43 hold-out cases.
+- Publish the 38 certified hold-out cases on Zenodo with the main data.
 
 ## Running the code yourself
 
