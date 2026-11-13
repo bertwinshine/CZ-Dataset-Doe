@@ -11,6 +11,33 @@ behave is listed with the reason.
 This is the second dataset of the project. The first one (three one-parameter sweeps, 33 cases,
 converged to Fluent's default 1e-3) is published separately and is not changed by this repository.
 
+## Changes from version 1
+
+This dataset is version 2 of the CZ melt-flow dataset. Version 1 (three one-parameter sweeps,
+33 cases) stays published unchanged and is still available as the previous version.
+
+| | Version 1 | Version 2 (this dataset) |
+|---|---|---|
+| Design | three one-parameter sweeps through one anchor point | 256 Sobol points over the whole parameter box, plus 8 corners and the centre |
+| Cases | 33 | 265 run, 254 kept; plus 60 coarse/fine mesh cases and 43 hold-out cases |
+| Parameter ranges | crystal 4 to 20 rpm, crucible −1 to −10 rpm, hot wall 1730 to 1785 K | the same |
+| Convergence | stopped at Fluent's default 1e-3 | all five residuals to 1e-6, heat balance checked |
+| Base case | 1745 K anchor | 1750 K case reproducing Huang et al. (2025) |
+| Rotation values | typed in by hand (0.838 / −0.314 rad/s, 0.03 % / 0.05 % off 8 / −3 rpm) | exact, through named expressions |
+| Model and mesh | 2D axisymmetric, laminar, 8,181 nodes | the same model, schemes, materials, boundary conditions and mesh |
+| Unsteady cases | 1790 to 1800 K kept separately as transient | excluded and listed with the reason |
+| Checks | certification per case | certification per case, mesh study (GCI), hold-out tests |
+
+**What this means for version 1 data.** Rerun at 1e-6 with the same settings, the version 1 cases
+differ by typically 1 to 5 % in the velocity fields (up to about 11 % for a few crucible cases),
+because version 1 stopped at 1e-3. The version 1 temperature cases at 1765, 1770, 1775, 1780 and
+1785 K are not steady solutions: at 1e-6 they keep oscillating, also when started from the
+converged 1760 K solution. They met the 1e-3 target after about 1,000 iterations, before the
+oscillation set in, so they looked converged. Converged versions of all other version 1 cases are
+part of the hold-out set here.
+
+The data format is unchanged: one table per case with r, z, u_r, u_z, u_swirl, p and T at every node.
+
 ## The physical problem
 
 In the Czochralski process a single silicon crystal is pulled slowly out of a crucible of molten
