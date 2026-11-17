@@ -1,0 +1,68 @@
+# Physical model behind every case. Values are read from the Fluent base case (CZ_base_1750K.cas.h5).
+# Fluid properties follow Huang et al., AIP Advances 15(10), 105202 (2025), Table II.
+
+model:
+  dimensions: 2D axisymmetric with swirl
+  time: steady
+  flow: laminar, incompressible, Boussinesq buoyancy
+  solver: ANSYS Fluent 2026 R1, pressure-based
+  convergence: all five scaled residuals below 1.0e-6
+  not_included: [turbulence, radiation, Marangoni flow, magnetic field, free-surface deformation]
+
+fluid:
+  name: silicon melt (reference-paper properties)
+  density: {value: 2530.0, unit: kg/m^3}
+  dynamic_viscosity: {value: 2.024, unit: Pa*s}
+  specific_heat: {value: 900.0, unit: J/(kg*K)}
+  thermal_conductivity: {value: 64.0, unit: W/(m*K)}
+  thermal_expansion_coefficient: {value: 1.5e-4, unit: 1/K}
+  note: >-
+    The viscosity is the reference paper's value and about 3000 times that of real liquid silicon
+    (about 7e-4 Pa*s). It keeps the flow laminar; the cases are reference solutions for this model,
+    not predictions of a real melt.
+
+operating_conditions:
+  boussinesq_reference_temperature: {value: 1717.0, unit: K}
+  operating_pressure: {value: 101325.0, unit: Pa}
+  gravity: {value: 9.81, unit: m/s^2, direction: -z (along the symmetry axis, downwards)}
+
+geometry:
+  crucible_radius: {value: 0.30, unit: m}
+  crystal_radius: {value: 0.18, unit: m}
+  melt_height: {value: 0.15, unit: m}
+
+boundary_conditions:
+  crystal_face: {velocity: rotating with the crystal, temperature: 1685 K}
+  crucible_wall: {velocity: rotating with the crucible, temperature: T_hot}
+  crucible_bottom: {velocity: rotating with the crucible, temperature: linear from 1700 K at the axis to T_hot at the wall}
+  free_surface: {velocity: no-slip lid, swirl ramps linearly from the crystal edge to the wall speed, no meridional flow, temperature: linear from 1685 K to T_hot}
+  axis: symmetry axis
+
+parameters:
+  crystal_rotation: {range: [4, 20], unit: rpm}
+  crucible_rotation: {range: [-10, -1], unit: rpm, note: negative means opposite to the crystal}
+  hot_wall_temperature: {range: [1730, 1785], unit: K}
+
+output_fields:
+  r: {unit: m, meaning: distance from the axis}
+  z: {unit: m, meaning: height above the crucible bottom}
+  u_r: {unit: m/s}
+  u_z: {unit: m/s}
+  u_swirl: {unit: m/s}
+  p: {unit: Pa, meaning: gauge pressure without the hydrostatic part, zero at r = 0, z = 0}
+  T: {unit: K}
+
+dimensionless_numbers:
+  # nu = mu / rho, alpha = k / (rho * cp); rotation in rad/s.
+  kinematic_viscosity: {value: 8.0e-4, unit: m^2/s}
+  thermal_diffusivity: {value: 2.81e-5, unit: m^2/s}
+  prandtl: 28.5
+  crystal_reynolds:
+    definition: omega_crystal * crystal_radius^2 / nu
+    range: [17, 85]
+  crucible_reynolds:
+    definition: omega_crucible * crucible_radius^2 / nu
+    range: [12, 118]
+  grashof:
+    definition: g * beta * (T_hot - 1685 K) * melt_height^3 / nu^2
+    range: [349, 776]

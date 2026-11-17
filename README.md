@@ -94,6 +94,7 @@ licence while still capturing swirl and buoyancy.
 | Crucible bottom | rotates with the crucible, temperature linear from 1700 K at the axis to T_hot at the wall |
 | Melt surface outside the crystal | no-slip lid with a prescribed swirl that ramps linearly from the crystal edge to the wall, no up/down or in/out flow; temperature linear from 1685 K to T_hot |
 | Buoyancy | Boussinesq, β = 1.5e-4 1/K, reference temperature 1717 K, g = 9.81 m/s² downwards |
+| Fluid properties | density 2530 kg/m³, viscosity 2.024 Pa·s, specific heat 900 J/(kg·K), conductivity 64 W/(m·K), from Huang et al. (2025), Table II; full list in `physics.yaml` |
 | Pressure | reported without the hydrostatic part |
 | Convergence | all five residuals (continuity, two velocities, swirl, energy) below 1e-6 |
 
@@ -266,6 +267,7 @@ twice as large. All cases pass. The leftover halves with each refinement (median
 
 ```
 case_matrix.csv        the 265 cases and their parameter values
+physics.yaml           fluid properties, boundary conditions, units, dimensionless numbers
 holdout_cases.csv      43 extra test cases, never used for training
 holdout/               outcome of the 43 hold-out runs
 mesh_study_*.csv       mesh study results: key quantities, GCI, whole-field differences
@@ -329,9 +331,11 @@ three values.
 
 These are controlled reference solutions for developing and testing prediction methods, not a model
 of a real industrial puller. The flow is assumed laminar, axisymmetric and steady, with a flat melt
-surface, no Marangoni (surface tension) flow, no radiation and no magnetic field. At the higher
-rotation rates the rotational Reynolds number is at or above the range where real CZ melts become
-turbulent, so the results there describe the laminar model, not the real furnace.
+surface, no Marangoni (surface tension) flow, no radiation and no magnetic field. The viscosity
+(2.024 Pa·s) is the reference paper's value and about 3000 times that of real liquid silicon, so the
+cases run at rotational Reynolds numbers of about 10 to 120, well inside the laminar range. With real
+silicon properties the same rotation rates would give about 3e4 to 3e5, where real CZ melts become
+turbulent. The results describe this laminar model, not a real furnace.
 
 ## Still to do
 
