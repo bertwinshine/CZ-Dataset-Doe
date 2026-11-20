@@ -306,8 +306,6 @@ python -m cz_doe.convert --reference <reference.csv> --out data <results folder>
                                                 # 6. turn Fluent exports into clean tables
 python -m cz_doe.certify data                   # 7. check every boundary condition in every table
                                                 #    other meshes: add --nodes 2091 --axis-tol 0.02
-python -m cz_doe.mesh_export <mesh.msh> --reference <any case CSV on that mesh> --name base --out mesh_base.h5
-                                                # 8. mesh file: cells, edges and boundary nodes
 ```
 
 What each part of `cz_doe/` does:
@@ -323,7 +321,6 @@ What each part of `cz_doe/` does:
 | `check_runs.py` | flags runs that did not converge or do not close the heat balance |
 | `status.py` | writes `run_status.csv`, `excluded_cases.csv` and the parameter-space plot |
 | `convert.py` | matches nodes by their coordinates, because Fluent numbers nodes differently between exports |
-| `mesh_export.py` | turns the Fluent mesh into an HDF5 file with nodes in the CSV row order, cells, edges and boundary node sets |
 | `certify.py` | recomputes every boundary condition from the case parameters and compares with the exported field |
 
 The base case must define three named expressions, `omega_cry` and `omega_cru` (in 1/s) and
