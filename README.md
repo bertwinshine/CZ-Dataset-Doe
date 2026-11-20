@@ -274,6 +274,7 @@ mesh_study_*.csv       mesh study results: key quantities, GCI, whole-field diff
 run_status.csv         outcome of every run
 excluded_cases.csv     the 11 runs that did not reach a steady solution
 figures/               plots
+mesh/                  the three Fluent meshes (.msh); in Fluent x is the axis (z) and y the radius (r)
 cz_doe/                the Python code (described below)
 tests/                 automatic checks for the code
 ```
